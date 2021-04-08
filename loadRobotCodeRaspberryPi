@@ -1,0 +1,115 @@
+import RPi.GPIO as GPIO
+from time import sleep
+import sys,tty, termios
+
+GPIO.setwarnings(False)			#disable warnings
+GPIO.setmode(GPIO.BOARD)		#set pin numbering system
+
+#declaring pins for motor1
+in11=35
+in12=33
+en1=37
+
+#declaring pins for motor2
+in21=38
+in22=36
+en2=40
+
+#setting up motor pins
+GPIO.setup(in11,GPIO.OUT)
+GPIO.setup(in12,GPIO.OUT)
+GPIO.setup(en1,GPIO.OUT)
+GPIO.setup(in21,GPIO.OUT)
+GPIO.setup(in22,GPIO.OUT)
+GPIO.setup(en2,GPIO.OUT)
+
+#initializing motor speed to zero
+GPIO.output(in11,GPIO.LOW)
+GPIO.output(in12,GPIO.LOW)
+GPIO.output(in21,GPIO.LOW)
+GPIO.output(in22,GPIO.LOW)
+
+#initializing pwm signal
+p1=GPIO.PWM(en1,1000)
+p1.start(25)
+p2=GPIO.PWM(en2,1000)
+p2.start(25)
+
+#for keyboard input
+def getch():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
+while True:
+    # Keyboard character retrieval method is called and saved
+    # into variable
+    char = getch()
+
+    # The car will drive forward when the "w" key is pressed
+    if(char == "w"):
+	print("forward")
+        p1.ChangeDutyCycle(100)
+        p2.ChangeDutyCycle(100)
+	GPIO.output(in11,GPIO.HIGH)
+	GPIO.output(in12,GPIO.LOW)
+	GPIO.output(in21,GPIO.HIGH)
+	GPIO.output(in22,GPIO.LOW)
+
+
+    # The car will reverse when the "s" key is pressed
+    if(char == "s"):
+	print("reverse")
+	p1.ChangeDutyCycle(100)
+	p2.ChangeDutyCycle(100)
+	GPIO.output(in11,GPIO.LOW)
+	GPIO.output(in12,GPIO.HIGH)
+	GPIO.output(in21,GPIO.LOW)
+	GPIO.output(in22,GPIO.HIGH)
+    
+    if(char == "d"):
+	print("right")
+	p1.ChangeDutyCycle(50)		#change duty cycle as per speed ratio
+	p2.ChangeDutyCycle(100)		#of the two motors
+	GPIO.output(in11,GPIO.HIGH)
+	GPIO.output(in12,GPIO.LOW)
+	GPIO.output(in21,GPIO.HIGH)
+	GPIO.output(in22,GPIO.LOW)
+    
+    if(char=="a"):
+	print("left")
+	p1.ChangeDutyCycle(100)        #change duty cycle as per speed ratio 
+	p2.ChangeDutyCycle(50)         #of the two motors 
+	GPIO.output(in11,GPIO.HIGH)
+	GPIO.output(in12,GPIO.LOW)
+	GPIO.output(in21,GPIO.HIGH)
+	GPIO.output(in22,GPIO.LOW)
+
+    if(char == "b"):
+        print("brake")
+        p1.ChangeDutyCycle(0)
+	p2.ChangeDutyCycle(0)
+	GPIO.output(in11,GPIO.LOW)
+	GPIO.output(in12,GPIO.LOW)
+	GPIO.output(in21,GPIO.LOW)
+	GPIO.output(in22,GPIO.LOW)
+
+
+    # The "x" key will break the loop and exit the program
+    if(char == "x"):
+        print("Program Ended")
+        break
+
+    # At the end of each loop the acceleratGPIOn motor will stop
+    # and wait for its next command
+
+    # The keyboard character variable will be set to blank, ready
+    # to save the next key that is pressed
+    char = ""
+# Program will cease all GPGPIO activity before terminating
+GPIO.cleanup()
